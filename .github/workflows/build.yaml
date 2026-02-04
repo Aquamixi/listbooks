@@ -1,17 +1,21 @@
-name: 'Build'
+name: "Build"
 
-on: 
+on:
   push:
-    branchs: [development]
+    branches: [development]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Use actions
-      uses: actions/setup-node@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Install npm packages
-      run: npm install
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install npm packages
+        run: npm ci
