@@ -1,0 +1,17 @@
+name: 'Build'
+
+on: 
+  push:
+    branchs: [main]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Use actions
+      uses: actions/setup-node@v3
+
+    - name: Install npm packages
+      run: npm install
