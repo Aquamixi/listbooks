@@ -15,7 +15,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          working-directory: listBooksLaravel
 
       - name: Install npm packages
         run: npm ci
+        working-directory: listBooksLaravel
