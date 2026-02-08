@@ -1,22 +1,67 @@
-name: "Build"
+name: Build
 
 on:
   push:
-    branches: [development]
+    branches: [ "main" ]
+  pull_request:
 
 jobs:
-  build:
+  docker-build:
+    name: Docker image builds
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
+      - name: Build Docker image
+        run: docker build -t listbooks-laravel:ci ./listBooksLaravel
+
+  app-build:
+    name: App installs + Laravel caches + frontend build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: listBooksLaravel
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # PHP + Composer no runner (sem cache)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, gd, zip
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      # Prepara .env e APP_KEY para comandos artisan
+      - name: Prepare env
+        run: |
+          cp .env.example .env
+          php -r "file_put_contents('/tmp/database.sqlite', '');"
+          php artisan key:generate --force
+
+      # Limpa e gera caches
+      - name: Clear & generate Laravel caches
+        run: |
+          php artisan config:clear
+          php artisan route:clear || true
+          php artisan view:clear
+
+          php artisan config:cache
+          php artisan route:cache || true
+          php artisan view:cache || true
+
+      # Node (sem cache)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          working-directory: listBooksLaravel
 
       - name: Install npm packages
         run: npm ci
-        working-directory: listBooksLaravel
+
